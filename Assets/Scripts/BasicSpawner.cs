@@ -1,4 +1,6 @@
+using ExitGames.Client.Photon.StructWrapping;
 using Fusion;
+using Fusion.Addons.Physics;
 using Fusion.Sockets;
 using System;
 using System.Collections;
@@ -14,23 +16,39 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private NetworkPrefabRef _playerPrefab; //Use the PlayerPrefab
 
     private Dictionary<PlayerRef, NetworkObject> _spawnedCharacters = new Dictionary<PlayerRef, NetworkObject>();
-    
-    
+
+    private bool _mouseButton0;
+    private bool _mouseButton1;
+    private byte _buttonState;
+
+
     // Start is called before the first frame update
     void Start()
     {
-
+        gameObject.AddComponent<RunnerSimulatePhysics3D>();
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
+        _buttonState = 0;
 
+        if (Input.GetMouseButton(0))
+        {
+            _buttonState |= NetworkInputData.MOUSEBUTTON0;
+        }
+
+
+
+        if (Input.GetMouseButton(1))
+        {
+            _buttonState |= NetworkInputData.MOUSEBUTTON1;
+        }
     }
 
 
 
-   
+
     //Program to start GameMode, Host or join
     async void StartGame(GameMode mode)
     {
@@ -46,7 +64,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
             sceneInfo.AddSceneRef(scene, LoadSceneMode.Additive);
         }
 
-        // Start or join (depends on gamemode) a session with a specific name
+        // Start or join (depends on game mode) a session with a specific name
         await _runner.StartGame(new StartGameArgs()
         {
             GameMode = mode,
@@ -56,7 +74,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         });
     }
 
-    //Show 2 bottons host or join
+    //Show 2 buttons host or join
 
     private void OnGUI()
     {
@@ -99,6 +117,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     {
         var data = new NetworkInputData();
 
+
         if (Input.GetKey(KeyCode.W))
             data.direction += Vector3.forward;
 
@@ -110,6 +129,8 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
         if (Input.GetKey(KeyCode.D))
             data.direction += Vector3.right;
+
+        data.buttons = _buttonState;
 
         input.Set(data);
     }
